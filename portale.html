@@ -408,8 +408,8 @@
       '<datalist id="mc-marche">' + r.marche.map(function(x) { return '<option value="' + esc(x) + '">'; }).join('') + '</datalist>' +
       '<label for="mc-modello">Modello</label>' +
       '<input id="mc-modello" value="' + esc(m ? m.modello : '') + '" placeholder="es. PRO 30, X1, Motion 3">' +
-      '<label for="mc-matricola">Matricola / numero di serie</label>' +
-      '<input id="mc-matricola" value="' + esc(m ? m.matricola : '') + '" placeholder="sulla targhetta della macchina">' +
+      '<label for="mc-matricola">Matricola / numero di serie / licenza</label>' +
+      '<input id="mc-matricola" value="' + esc(m ? m.matricola : '') + '" placeholder="targhetta della macchina o n. licenza/dongle del software">' +
       '<label for="mc-data">Data di acquisto o installazione</label>' +
       '<input id="mc-data" type="date" value="' + esc(m ? m.installazioneIso : '') + '">' +
       '<label for="mc-dentag">Acquistata da Dentag?</label>' +
