@@ -80,6 +80,13 @@
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
   .btn.ghost:hover { border-color: var(--gold); color: var(--gold); }
 
+  .collega { margin: 14px 0 20px; border-color: rgba(228,27,129,.5); }
+  .collega p { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 6px 0 12px; }
+  .collega-campi { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .collega-campi > div { flex: 1; min-width: 150px; }
+  .collega label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .collega input { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; }
+  .collega input:focus { outline: none; border-color: var(--gold); }
   .testata { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
   .badge.attesa { background: rgba(147,163,184,.12); color: var(--muted); border: 1px solid rgba(147,163,184,.4); }
   .modal select { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; }
@@ -241,7 +248,7 @@
     var primo = Object.keys(MODULI).filter(function(k) { return moduliConsentiti.indexOf(k) !== -1; })[0];
     if (primo) apri(primo); else contenuto('<div class="vuoto"><div>Nessun modulo abilitato per il tuo account.</div></div>');
     // verifica che la sessione sia ancora valida lato server
-    api({ azione: 'sessione' }).catch(function() {});
+    api({ azione: 'sessione' }).then(function(r) { if (r && r.ok) sessionStorage.setItem('dcli_collegato', r.collegato ? '1' : '0'); }).catch(function() {});
   }
 
   /* ---------------- utilità ---------------- */
@@ -263,7 +270,7 @@
 
   // Solo le chiavi del portale clienti (non tocca il portale interno sullo stesso dominio)
   function pulisciSessione() {
-    ['dcli_token', 'dcli_nome', 'dcli_email', 'dcli_moduli'].forEach(function(k) { sessionStorage.removeItem(k); });
+    ['dcli_token', 'dcli_nome', 'dcli_email', 'dcli_moduli', 'dcli_collegato'].forEach(function(k) { sessionStorage.removeItem(k); });
   }
 
   function contenuto(html) { document.getElementById('contenuto').innerHTML = html; }
@@ -322,7 +329,18 @@
     var html = '<div class="pagina"><div class="pagina-inner">' +
       '<div class="testata"><div><h1 class="titolo-pagina">I tuoi macchinari</h1>' +
       '<p class="sottotitolo">Apparecchiature registrate per il tuo laboratorio.</p></div>' +
-      '<button class="btn" onclick="apriFormMacchina()">+ Aggiungi macchinario</button></div>';
+      '<button class="btn" onclick="apriFormMacchina()">+ Aggiungi macchinario</button></div>' +
+      (sessionStorage.getItem('dcli_collegato') === '1' ? '' :
+        '<form class="card collega" onsubmit="return collegaCodice(event)">' +
+          '<h3>Collega il tuo account al codice cliente Dentag</h3>' +
+          '<p>Se hai già acquistato da Dentag, collega l\'account per vedere subito le macchine che abbiamo registrato per te. ' +
+          'Trovi il <b>codice cliente</b> sulle nostre fatture.</p>' +
+          '<div class="collega-campi">' +
+            '<div><label for="cl-codice">Codice cliente</label><input id="cl-codice" inputmode="numeric" required placeholder="es. 123456"></div>' +
+            '<div><label for="cl-piva">Partita IVA</label><input id="cl-piva" required placeholder="es. 01234567890"></div>' +
+            '<button class="btn" id="btn-collega" type="submit">Collega</button>' +
+          '</div><div class="msg" id="msg-collega"></div>' +
+        '</form>');
     if (!r.macchinari.length) {
       html += '<div class="card"><p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.6">' +
         'Non risultano ancora macchinari sul tuo account. Aggiungili con il pulsante <b>+ Aggiungi macchinario</b>: ' +
@@ -352,6 +370,24 @@
       }).join('') + '</div>';
     }
     contenuto(html + '</div></div>');
+  }
+
+  function collegaCodice(e) {
+    e.preventDefault();
+    var msg = document.getElementById('msg-collega');
+    var btn = document.getElementById('btn-collega');
+    btn.disabled = true;
+    api({ azione: 'collegaCodice', codice: document.getElementById('cl-codice').value, piva: document.getElementById('cl-piva').value })
+      .then(function(r) {
+        btn.disabled = false;
+        if (!r.ok) { msg.className = 'msg errore'; msg.textContent = r.messaggio; return; }
+        sessionStorage.setItem('dcli_collegato', '1');
+        if (r.nome) { sessionStorage.setItem('dcli_nome', r.nome); nome = r.nome; document.getElementById('nome-utente').textContent = r.nome; }
+        cacheManuali = null;
+        renderMacchinari();
+      })
+      .catch(function(err) { btn.disabled = false; msg.className = 'msg errore'; msg.textContent = err.message; });
+    return false;
   }
 
   function apriFormMacchina(idx) {
