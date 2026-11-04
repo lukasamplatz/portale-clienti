@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dentag Italia — Portale Clienti</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f4b60a'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%2305182d'%3EDT%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #05182d; --navy2: #0d2540; --navy3: #14304f;
+    --gold: #f4b60a; --text: #e8edf3; --muted: #93a3b8; --border: #1c3a5c;
+    --red: #ef5a6f; --green: #3ecf8e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--navy); color: var(--text); font-family: 'Inter', sans-serif; }
+  .layout { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
+
+  /* ---------- Sidebar (come portale Dentag) ---------- */
+  .sidebar {
+    width: 240px; flex-shrink: 0; background: var(--navy2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px 14px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; padding: 0 6px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .logo .mark { width: 36px; height: 36px; border-radius: 9px; background: var(--gold); color: var(--navy); font-weight: 700; font-family: 'Space Grotesk', sans-serif; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; margin: 0; }
+  .logo p { font-size: 10.5px; color: var(--muted); margin: 1px 0 0; }
+
+  .menu { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+  .menu-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 13px; color: var(--muted); transition: background .12s, color .12s;
+  }
+  .menu-item:hover { background: rgba(255,255,255,.04); color: var(--text); }
+  .menu-item.attivo { background: rgba(244,182,10,.1); color: var(--gold); font-weight: 600; }
+
+  .contatti { font-size: 11.5px; color: var(--muted); line-height: 1.8; padding: 12px 6px 0; }
+  .contatti a { color: var(--muted); text-decoration: none; }
+  .contatti a:hover { color: var(--gold); }
+
+  .footer-sidebar { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+  .utente { font-size: 12px; color: var(--muted); padding: 0 6px 10px; word-break: break-all; }
+  .utente b { color: var(--text); display: block; font-size: 13px; word-break: normal; }
+  .btn-sec {
+    width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: 9px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 6px;
+  }
+  .btn-sec:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ---------- Contenuto ---------- */
+  .contenuto { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .contenuto iframe { flex: 1; border: none; width: 100%; background: #f4f6f9; }
+  .pagina { flex: 1; overflow-y: auto; padding: 28px 32px 40px; }
+  .pagina-inner { max-width: 1000px; margin: 0 auto; }
+  .titolo-pagina { font-family: 'Space Grotesk', sans-serif; font-size: 22px; margin: 0 0 4px; }
+  .sottotitolo { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+  .vuoto { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; flex-direction: column; gap: 10px; text-align: center; padding: 30px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: gira .8s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+
+  /* Home */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .tile { background: var(--navy2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; transition: border-color .15s, transform .15s; }
+  .tile:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .tile .ico { font-size: 26px; }
+  .tile h3 { font-family: 'Space Grotesk', sans-serif; font-size: 15px; margin: 10px 0 4px; }
+  .tile p { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  /* Macchinari */
+  .grid-macchine { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+  .card { background: var(--navy2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; }
+  .card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; margin: 0; }
+  .card .modello { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 3px 9px; margin-top: 10px; align-self: flex-start; }
+  .badge.ok { background: rgba(62,207,142,.12); color: var(--green); border: 1px solid rgba(62,207,142,.35); }
+  .badge.ko { background: rgba(239,90,111,.1); color: var(--red); border: 1px solid rgba(239,90,111,.35); }
+  .dati { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 14px 0 4px; }
+  .dati .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .dati .v { font-size: 13px; margin-top: 2px; }
+  .card .note { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; line-height: 1.5; white-space: pre-line; }
+  .azioni { display: flex; gap: 8px; margin-top: auto; padding-top: 14px; flex-wrap: wrap; }
+  .btn {
+    background: var(--gold); color: var(--navy); border: none; border-radius: 8px; padding: 9px 13px;
+    font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; display: inline-block;
+  }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  .btn.ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Manuali */
+  .barra { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+  .cerca {
+    flex: 1; min-width: 200px; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 13px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px;
+  }
+  .cerca:focus { outline: none; border-color: var(--gold); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .chip { background: var(--navy2); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .chip.attivo { background: rgba(244,182,10,.1); color: var(--gold); border-color: rgba(244,182,10,.5); font-weight: 600; }
+  .categoria { margin-bottom: 26px; }
+  .categoria h2 { font-family: 'Space Grotesk', sans-serif; font-size: 15px; margin: 0 0 10px; color: var(--gold); }
+  .lista { background: var(--navy2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .riga-file { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+  .riga-file:first-child { border-top: none; }
+  .riga-file:hover { background: rgba(255,255,255,.03); }
+  .riga-file .tipo { flex-shrink: 0; width: 40px; text-align: center; font-size: 10px; font-weight: 700; border-radius: 6px; padding: 5px 0; background: var(--navy3); color: var(--gold); text-transform: uppercase; }
+  .riga-file .nome { flex: 1; min-width: 0; font-size: 13.5px; }
+  .riga-file .nome small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .riga-file .apri { color: var(--muted); font-size: 12px; flex-shrink: 0; }
+
+  /* Visualizzatore documenti */
+  .viewer { position: fixed; inset: 0; z-index: 80; background: rgba(2,10,20,.85); display: none; flex-direction: column; }
+  .viewer.aperto { display: flex; }
+  .viewer-top {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    background: var(--navy2); border-bottom: 1px solid var(--border);
+  }
+  .viewer-top .t { flex: 1; min-width: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .viewer-corpo { flex: 1; display: flex; background: #fff; }
+  .viewer-corpo iframe { flex: 1; border: none; width: 100%; }
+  .viewer-corpo .vuoto { background: var(--navy); }
+
+  /* Modale cambio password */
+  .modal-bg { position: fixed; inset: 0; z-index: 90; background: rgba(2,10,20,.75); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-bg.aperto { display: flex; }
+  .modal { background: var(--navy2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 380px; }
+  .modal h3 { font-family: 'Space Grotesk', sans-serif; margin: 0 0 6px; font-size: 17px; }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+  .modal input { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; }
+  .modal input:focus { outline: none; border-color: var(--gold); }
+  .msg { display: none; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-top: 14px; }
+  .msg.errore { display: block; background: rgba(239,90,111,.12); border: 1px solid rgba(239,90,111,.35); color: var(--red); }
+  .msg.ok { display: block; background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.35); color: var(--green); }
+
+  .hamburger { display: none; position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); z-index: 50; background: var(--navy2); border: 1px solid var(--border); border-radius: 8px; width: 40px; height: 40px; color: var(--text); font-size: 18px; cursor: pointer; }
+
+  @media (max-width: 860px) {
+    .hamburger { display: block; }
+    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 40; transform: translateX(-100%); transition: transform .2s; }
+    .sidebar.aperta { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,.4); }
+    .contenuto { padding-top: calc(60px + env(safe-area-inset-top, 0px)); }
+    .pagina { padding: 8px 16px 32px; }
+    .viewer-top { flex-wrap: wrap; }
+    .viewer-top .t { order: -1; flex-basis: 100%; }
+    .viewer-top .btn { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('aperta')">☰</button>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="mark">DT</div>
+      <div><h1>Dentag Italia</h1><p>Portale Clienti</p></div>
+    </div>
+
+    <div class="menu" id="menu"></div>
+
+    <div class="contatti" id="contatti"></div>
+
+    <div class="footer-sidebar">
+      <div class="utente"><b id="nome-utente">—</b><span id="email-utente"></span></div>
+      <button class="btn-sec" onclick="apriCambioPassword()">Cambia password</button>
+      <button class="btn-sec" onclick="logout()">Esci</button>
+    </div>
+  </div>
+
+  <div class="contenuto" id="contenuto"></div>
+</div>
+
+<!-- Visualizzatore manuali -->
+<div class="viewer" id="viewer">
+  <div class="viewer-top">
+    <button class="btn ghost" onclick="chiudiViewer()">← Indietro</button>
+    <div class="t" id="viewer-titolo"></div>
+    <a class="btn ghost" id="viewer-nuova" target="_blank" rel="noopener">Apri in nuova scheda</a>
+    <a class="btn" id="viewer-scarica">Scarica</a>
+  </div>
+  <div class="viewer-corpo" id="viewer-corpo"></div>
+</div>
+
+<!-- Cambio password -->
+<div class="modal-bg" id="modal-pwd" onclick="if(event.target===this) chiudiCambioPassword()">
+  <form class="modal" onsubmit="return cambiaPassword(event)">
+    <h3>Cambia password</h3>
+    <label for="pwd-vecchia">Password attuale</label>
+    <input type="password" id="pwd-vecchia" required autocomplete="current-password">
+    <label for="pwd-nuova">Nuova password (min. 8 caratteri)</label>
+    <input type="password" id="pwd-nuova" required minlength="8" autocomplete="new-password">
+    <label for="pwd-conferma">Ripeti nuova password</label>
+    <input type="password" id="pwd-conferma" required minlength="8" autocomplete="new-password">
+    <div class="msg" id="msg-pwd"></div>
+    <div class="azioni">
+      <button type="submit" class="btn" id="btn-pwd">Salva</button>
+      <button type="button" class="btn ghost" onclick="chiudiCambioPassword()">Chiudi</button>
+    </div>
+  </form>
+</div>
+
+<script src="config.js"></script>
+<script>
+  var CFG = window.PORTALE_CLIENTI;
+
+  var MODULI = {
+    HOME:       { etichetta: '🏠 HOME' },
+    HELPDESK:   { etichetta: '💻 HELPDESK',   descr: 'Apri una richiesta di assistenza e segui i tuoi ticket e le ore del tuo piano.' },
+    MACCHINARI: { etichetta: '🦷 MACCHINARI', descr: 'Le apparecchiature Dentag installate nel tuo laboratorio: matricole, garanzia, interventi.' },
+    MANUALI:    { etichetta: '📘 MANUALI',    descr: 'Manuali d\'uso e istruzioni dei tuoi macchinari, sempre aggiornati.' }
+  };
+
+  var token = sessionStorage.getItem('dcli_token');
+  var nome = sessionStorage.getItem('dcli_nome') || '';
+  var email = sessionStorage.getItem('dcli_email') || '';
+  var moduliConsentiti = JSON.parse(sessionStorage.getItem('dcli_moduli') || '[]');
+  var cacheManuali = null;
+  var urlViewer = null;
+
+  if (!token) {
+    window.location.replace('index.html');
+  } else {
+    document.getElementById('nome-utente').textContent = nome;
+    document.getElementById('email-utente').textContent = email;
+    document.getElementById('contatti').innerHTML =
+      '📞 <a href="tel:' + CFG.TELEFONO.replace(/\s/g, '') + '">' + esc(CFG.TELEFONO) + '</a><br>' +
+      '✉️ <a href="mailto:' + esc(CFG.EMAIL) + '">' + esc(CFG.EMAIL) + '</a><br>' +
+      '💬 <a href="' + esc(CFG.WHATSAPP) + '" target="_blank" rel="noopener">WhatsApp</a>';
+    renderMenu();
+    apri('HOME');
+    // verifica che la sessione sia ancora valida lato server
+    api({ azione: 'sessione' }).catch(function() {});
+  }
+
+  /* ---------------- utilità ---------------- */
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function api(dati) {
+    dati.t = token;
+    return fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(dati) })
+      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        if (r && r.scaduta) { pulisciSessione(); window.location.replace('index.html#scaduta'); throw new Error('Sessione scaduta'); }
+        return r;
+      });
+  }
+
+  // Solo le chiavi del portale clienti (non tocca il portale interno sullo stesso dominio)
+  function pulisciSessione() {
+    ['dcli_token', 'dcli_nome', 'dcli_email', 'dcli_moduli'].forEach(function(k) { sessionStorage.removeItem(k); });
+  }
+
+  function contenuto(html) { document.getElementById('contenuto').innerHTML = html; }
+  function caricamento(testo) { contenuto('<div class="vuoto"><div class="spinner"></div><div>' + esc(testo || 'Caricamento...') + '</div></div>'); }
+  function errore(testo) { contenuto('<div class="vuoto"><div style="font-size:28px">⚠️</div><div>' + esc(testo) + '</div></div>'); }
+
+  /* ---------------- menu ---------------- */
+
+  function renderMenu() {
+    var menu = document.getElementById('menu');
+    menu.innerHTML = '';
+    ['HOME'].concat(moduliConsentiti).forEach(function(chiave) {
+      if (!MODULI[chiave]) return;
+      var el = document.createElement('div');
+      el.className = 'menu-item';
+      el.dataset.modulo = chiave;
+      el.textContent = MODULI[chiave].etichetta;
+      el.onclick = function() { apri(chiave); };
+      menu.appendChild(el);
+    });
+  }
+
+  function apri(chiave, opzioni) {
+    document.querySelectorAll('.menu-item').forEach(function(e) { e.classList.toggle('attivo', e.dataset.modulo === chiave); });
+    document.querySelector('.sidebar').classList.remove('aperta');
+    if (chiave === 'HOME') return renderHome();
+    if (chiave === 'HELPDESK') return renderHelpdesk();
+    if (chiave === 'MACCHINARI') return renderMacchinari();
+    if (chiave === 'MANUALI') return renderManuali(opzioni && opzioni.filtro);
+  }
+
+  /* ---------------- HOME ---------------- */
+
+  function renderHome() {
+    var tiles = moduliConsentiti.filter(function(k) { return MODULI[k]; }).map(function(k) {
+      var m = MODULI[k];
+      var parti = m.etichetta.split(' ');
+      return '<div class="tile" onclick="apri(\'' + k + '\')"><div class="ico">' + parti[0] + '</div>' +
+        '<h3>' + esc(parti.slice(1).join(' ')) + '</h3><p>' + esc(m.descr) + '</p></div>';
+    }).join('');
+    contenuto('<div class="pagina"><div class="pagina-inner">' +
+      '<h1 class="titolo-pagina">Benvenuto' + (nome ? ', ' + esc(nome) : '') + '</h1>' +
+      '<p class="sottotitolo">Il tuo spazio Dentag: assistenza, macchinari e documentazione in un unico posto.</p>' +
+      '<div class="tiles">' + (tiles || '<p class="sottotitolo">Nessun modulo abilitato per il tuo account.</p>') + '</div>' +
+      '</div></div>');
+  }
+
+  /* ---------------- HELPDESK ---------------- */
+
+  function renderHelpdesk() {
+    // Stessa web app dell'Helpdesk "solo email": con il token entra già autenticata
+    var src = CFG.API_URL + '?embed=1&t=' + encodeURIComponent(token);
+    contenuto('<iframe src="' + esc(src) + '" title="Helpdesk Dentag"></iframe>');
+  }
+
+  /* ---------------- MACCHINARI ---------------- */
+
+  function renderMacchinari() {
+    caricamento('Caricamento macchinari...');
+    api({ azione: 'macchinari' }).then(function(r) {
+      if (!r.ok) return errore(r.messaggio);
+      var html = '<div class="pagina"><div class="pagina-inner">' +
+        '<h1 class="titolo-pagina">I tuoi macchinari</h1>' +
+        '<p class="sottotitolo">Apparecchiature Dentag registrate per il tuo laboratorio.</p>';
+      if (!r.macchinari.length) {
+        html += '<div class="card"><p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.6">' +
+          'Non risultano ancora macchinari registrati sul tuo account. Se hai acquistato un\'apparecchiatura da Dentag, ' +
+          'scrivici a <a style="color:var(--gold)" href="mailto:' + esc(CFG.EMAIL) + '">' + esc(CFG.EMAIL) + '</a> e la aggiungeremo.</p></div>';
+      } else {
+        html += '<div class="grid-macchine">' + r.macchinari.map(function(m) {
+          var badge = m.garanziaAttiva === true ? '<span class="badge ok">In garanzia fino al ' + esc(m.garanzia) + '</span>'
+                    : m.garanziaAttiva === false ? '<span class="badge ko">Garanzia scaduta il ' + esc(m.garanzia) + '</span>' : '';
+          var dati = [
+            ['Matricola', m.matricola], ['Installazione', m.installazione],
+            ['Ultimo intervento', m.ultimoIntervento], m.garanziaAttiva === null && m.garanzia ? ['Garanzia', m.garanzia] : null
+          ].filter(function(d) { return d && d[1]; }).map(function(d) {
+            return '<div><div class="l">' + esc(d[0]) + '</div><div class="v">' + esc(d[1]) + '</div></div>';
+          }).join('');
+          var filtro = [m.macchina, m.modello].filter(String).join('|');
+          return '<div class="card">' +
+            '<h3>' + esc(m.macchina || m.modello) + '</h3>' +
+            (m.macchina && m.modello ? '<div class="modello">' + esc(m.modello) + '</div>' : '') +
+            badge +
+            (dati ? '<div class="dati">' + dati + '</div>' : '') +
+            (m.note ? '<div class="note">' + esc(m.note) + '</div>' : '') +
+            '<div class="azioni">' +
+              (moduliConsentiti.indexOf('MANUALI') !== -1 ? '<button class="btn ghost" data-filtro="' + esc(filtro) + '" onclick="apri(\'MANUALI\',{filtro:this.dataset.filtro})">📘 Manuali</button>' : '') +
+              (moduliConsentiti.indexOf('HELPDESK') !== -1 ? '<button class="btn" onclick="apri(\'HELPDESK\')">Richiedi assistenza</button>' : '') +
+            '</div></div>';
+        }).join('') + '</div>';
+      }
+      contenuto(html + '</div></div>');
+    }).catch(function(err) { errore('Errore di connessione: ' + err.message); });
+  }
+
+  /* ---------------- MANUALI ---------------- */
+
+  var statoManuali = { categoria: '', testo: '' };
+
+  function renderManuali(filtro) {
+    statoManuali = { categoria: '', testo: '' };
+    if (filtro && cacheManuali) { cacheManuali = null; }
+    if (cacheManuali) return disegnaManuali();
+    caricamento('Caricamento manuali...');
+    api({ azione: 'manuali' }).then(function(r) {
+      if (!r.ok) return errore(r.messaggio);
+      cacheManuali = r.categorie;
+      // se il filtro arriva da un macchinario e coincide con una categoria, apri quella
+      if (filtro) {
+        var parti = filtro.split('|');
+        statoManuali.testo = parti[parti.length - 1];   // in mancanza di categoria: cerca per modello
+        parti.forEach(function(p) {
+          var n = normalizza(p);
+          cacheManuali.forEach(function(c) {
+            var nc = normalizza(c.nome);
+            if (n && nc && (n.indexOf(nc) !== -1 || nc.indexOf(n) !== -1)) { statoManuali.categoria = c.nome; statoManuali.testo = ''; }
+          });
+        });
+      }
+      disegnaManuali();
+    }).catch(function(err) { errore('Errore di connessione: ' + err.message); });
+  }
+
+  function normalizza(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+  function disegnaManuali() {
+    var html = '<div class="pagina"><div class="pagina-inner">' +
+      '<h1 class="titolo-pagina">Manuali</h1>' +
+      '<p class="sottotitolo">Manuali d\'uso e istruzioni dei tuoi macchinari.</p>';
+    if (!cacheManuali.length) {
+      contenuto(html + '<div class="card"><p style="margin:0;color:var(--muted);font-size:13.5px">Nessun manuale disponibile al momento.</p></div></div></div>');
+      return;
+    }
+    html += '<div class="barra"><input class="cerca" id="cerca-manuali" type="search" placeholder="Cerca un manuale..." value="' + esc(statoManuali.testo) + '"></div>';
+    html += '<div class="chips"><button class="chip' + (!statoManuali.categoria ? ' attivo' : '') + '" data-cat="">Tutti</button>' +
+      cacheManuali.map(function(c) {
+        return '<button class="chip' + (statoManuali.categoria === c.nome ? ' attivo' : '') + '" data-cat="' + esc(c.nome) + '">' + esc(c.nome) + '</button>';
+      }).join('') + '</div><div id="elenco-manuali"></div>';
+    contenuto(html + '</div></div>');
+
+    document.querySelectorAll('.chip').forEach(function(b) {
+      b.onclick = function() {
+        statoManuali.categoria = b.dataset.cat;
+        document.querySelectorAll('.chip').forEach(function(x) { x.classList.toggle('attivo', x === b); });
+        elencoManuali();
+      };
+    });
+    document.getElementById('cerca-manuali').oninput = function(e) { statoManuali.testo = e.target.value; elencoManuali(); };
+    elencoManuali();
+  }
+
+  function elencoManuali() {
+    var testo = statoManuali.testo.trim().toLowerCase();
+    var html = '';
+    cacheManuali.forEach(function(c, ci) {
+      if (statoManuali.categoria && statoManuali.categoria !== c.nome) return;
+      var files = c.files.map(function(f, fi) { return { f: f, fi: fi }; }).filter(function(x) {
+        if (!testo) return true;
+        return (x.f.nome + ' ' + x.f.sezione + ' ' + c.nome).toLowerCase().indexOf(testo) !== -1;
+      });
+      if (!files.length) return;
+      html += '<div class="categoria"><h2>' + esc(c.nome) + '</h2><div class="lista">' + files.map(function(x) {
+        var f = x.f;
+        var info = [f.sezione, 'agg. ' + f.aggiornato].filter(String).join(' · ');
+        return '<div class="riga-file" onclick="apriManuale(' + ci + ',' + x.fi + ')">' +
+          '<span class="tipo">' + esc(f.tipo === 'immagine' ? 'img' : f.tipo) + '</span>' +
+          '<span class="nome">' + esc(f.nome) + '<small>' + esc(info) + '</small></span>' +
+          '<span class="apri">Apri →</span></div>';
+      }).join('') + '</div></div>';
+    });
+    document.getElementById('elenco-manuali').innerHTML = html ||
+      '<p class="sottotitolo">Nessun manuale corrisponde alla ricerca.</p>';
+  }
+
+  function apriManuale(ci, fi) {
+    var f = cacheManuali[ci].files[fi];
+    var viewer = document.getElementById('viewer');
+    var corpo = document.getElementById('viewer-corpo');
+    document.getElementById('viewer-titolo').textContent = f.nome;
+    document.getElementById('viewer-nuova').style.display = 'none';
+    document.getElementById('viewer-scarica').style.display = 'none';
+    corpo.innerHTML = '<div class="vuoto"><div class="spinner"></div><div>Apertura documento...</div></div>';
+    viewer.classList.add('aperto');
+
+    api({ azione: 'file', id: f.id }).then(function(r) {
+      if (!r.ok) { corpo.innerHTML = '<div class="vuoto">' + esc(r.messaggio) + '</div>'; return; }
+      var blob;
+      if (r.testo != null) {
+        blob = new Blob([r.testo], { type: 'text/html;charset=utf-8' });
+      } else {
+        var bin = atob(r.base64), arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        blob = new Blob([arr], { type: r.mime });
+      }
+      if (urlViewer) URL.revokeObjectURL(urlViewer);
+      urlViewer = URL.createObjectURL(blob);
+
+      var visualizzabile = /^(application\/pdf|text\/html|image\/)/.test(r.mime);
+      corpo.innerHTML = visualizzabile
+        ? '<iframe src="' + urlViewer + '" title="' + esc(f.nome) + '"></iframe>'
+        : '<div class="vuoto"><div style="font-size:28px">📄</div><div>Anteprima non disponibile per questo tipo di file.<br>Usa il pulsante "Scarica".</div></div>';
+      var nuova = document.getElementById('viewer-nuova');
+      nuova.href = urlViewer; nuova.style.display = visualizzabile ? '' : 'none';
+      var scarica = document.getElementById('viewer-scarica');
+      scarica.href = urlViewer; scarica.download = r.nome; scarica.style.display = '';
+    }).catch(function(err) {
+      corpo.innerHTML = '<div class="vuoto">Errore di connessione: ' + esc(err.message) + '</div>';
+    });
+  }
+
+  function chiudiViewer() {
+    document.getElementById('viewer').classList.remove('aperto');
+    document.getElementById('viewer-corpo').innerHTML = '';
+  }
+
+  /* ---------------- account ---------------- */
+
+  function apriCambioPassword() {
+    ['pwd-vecchia', 'pwd-nuova', 'pwd-conferma'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('msg-pwd').className = 'msg';
+    document.getElementById('modal-pwd').classList.add('aperto');
+    document.querySelector('.sidebar').classList.remove('aperta');
+  }
+  function chiudiCambioPassword() { document.getElementById('modal-pwd').classList.remove('aperto'); }
+
+  function cambiaPassword(e) {
+    e.preventDefault();
+    var msg = document.getElementById('msg-pwd');
+    var nuova = document.getElementById('pwd-nuova').value;
+    if (nuova !== document.getElementById('pwd-conferma').value) {
+      msg.className = 'msg errore'; msg.textContent = 'Le due password non coincidono.'; return false;
+    }
+    var btn = document.getElementById('btn-pwd');
+    btn.disabled = true;
+    api({ azione: 'cambiaPassword', vecchia: document.getElementById('pwd-vecchia').value, nuova: nuova })
+      .then(function(r) {
+        btn.disabled = false;
+        msg.className = 'msg ' + (r.ok ? 'ok' : 'errore'); msg.textContent = r.messaggio;
+        if (r.ok) setTimeout(chiudiCambioPassword, 1200);
+      })
+      .catch(function(err) { btn.disabled = false; msg.className = 'msg errore'; msg.textContent = err.message; });
+    return false;
+  }
+
+  function logout() {
+    api({ azione: 'logout' }).catch(function() {}).then(function() {
+      pulisciSessione();
+      window.location.replace('index.html');
+    });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { chiudiViewer(); chiudiCambioPassword(); }
+  });
+</script>
+</body>
+</html>
