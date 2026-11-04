@@ -165,6 +165,7 @@
       <div class="utente"><b id="nome-utente">—</b><span id="email-utente"></span></div>
       <button class="btn-sec" onclick="apriCambioPassword()">Cambia password</button>
       <button class="btn-sec" onclick="logout()">Esci</button>
+      <div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:10px" id="versione"></div>
     </div>
   </div>
 
@@ -227,6 +228,7 @@
       '📞 <a href="tel:' + CFG.TELEFONO.replace(/\s/g, '') + '">' + esc(CFG.TELEFONO) + '</a><br>' +
       '✉️ <a href="mailto:' + esc(CFG.EMAIL) + '">' + esc(CFG.EMAIL) + '</a><br>' +
       '💬 <a href="' + esc(CFG.WHATSAPP) + '" target="_blank" rel="noopener">WhatsApp</a>';
+    document.getElementById('versione').textContent = 'Portale Clienti ' + (CFG.VERSIONE || '');
     renderMenu();
     apri('HOME');
     // verifica che la sessione sia ancora valida lato server
