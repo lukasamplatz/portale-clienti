@@ -1,4 +1,4 @@
-x// ===== Portale Clienti Dentag — configurazione =====
+// ===== Portale Clienti Dentag — configurazione =====
 // URL /exec della web app "Portale Helpdesk DENTAG" (lo STESSO link che i clienti usano oggi con la sola email).
 // Dopo aver aggiunto PortaleClienti.gs: Esegui il deployment > Gestisci deployment > modifica > "Nuova versione",
 // così l'URL resta identico e il vecchio link continua a funzionare.
