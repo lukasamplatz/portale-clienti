@@ -6,7 +6,7 @@
 window.PORTALE_CLIENTI = {
   VERSIONE: 'v1.2',
 
-  API_URL: 'INSERIRE_URL_EXEC_HELPDESK_CLIENTI',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwVzbUXZjzVzUx1tbwYY_VrXmDCWTEpnlPLDl8HAtzzRb8pYIYwccOaShu-skq5c2OvEQ/exec',
 
   // Contatti mostrati nel portale
   TELEFONO: '+39 0471 256 233',
