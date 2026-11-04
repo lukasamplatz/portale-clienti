@@ -80,6 +80,16 @@
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
   .btn.ghost:hover { border-color: var(--gold); color: var(--gold); }
 
+  .testata { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .badge.attesa { background: rgba(147,163,184,.12); color: var(--muted); border: 1px solid rgba(147,163,184,.4); }
+  .modal select { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; }
+  .modal select:focus { outline: none; border-color: var(--gold); }
+  .modal input[type=date] { color-scheme: dark; }
+  .sub-modal { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; line-height: 1.5; }
+  .btn.elimina { color: var(--red); margin-left: auto; }
+  .btn.elimina:hover { border-color: var(--red); color: var(--red); }
+  .modal { max-height: 92vh; overflow-y: auto; }
+
   /* Manuali */
   .barra { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
   .cerca {
@@ -174,6 +184,11 @@
     <a class="btn" id="viewer-scarica">Scarica</a>
   </div>
   <div class="viewer-corpo" id="viewer-corpo"></div>
+</div>
+
+<!-- Aggiungi / modifica macchinario -->
+<div class="modal-bg" id="modal-macchina" onclick="if(event.target===this) chiudiFormMacchina()">
+  <form class="modal" id="modal-macchina-corpo" onsubmit="return salvaMacchina(event)"></form>
 </div>
 
 <!-- Cambio password -->
@@ -289,42 +304,130 @@
 
   /* ---------------- MACCHINARI ---------------- */
 
+  var datiMacchinari = null;
+
   function renderMacchinari() {
     caricamento('Caricamento macchinari...');
     api({ azione: 'macchinari' }).then(function(r) {
       if (!r.ok) return errore(r.messaggio);
-      var html = '<div class="pagina"><div class="pagina-inner">' +
-        '<h1 class="titolo-pagina">I tuoi macchinari</h1>' +
-        '<p class="sottotitolo">Apparecchiature Dentag registrate per il tuo laboratorio.</p>';
-      if (!r.macchinari.length) {
-        html += '<div class="card"><p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.6">' +
-          'Non risultano ancora macchinari registrati sul tuo account. Se hai acquistato un\'apparecchiatura da Dentag, ' +
-          'scrivici a <a style="color:var(--gold)" href="mailto:' + esc(CFG.EMAIL) + '">' + esc(CFG.EMAIL) + '</a> e la aggiungeremo.</p></div>';
-      } else {
-        html += '<div class="grid-macchine">' + r.macchinari.map(function(m) {
-          var badge = m.garanziaAttiva === true ? '<span class="badge ok">In garanzia fino al ' + esc(m.garanzia) + '</span>'
-                    : m.garanziaAttiva === false ? '<span class="badge ko">Garanzia scaduta il ' + esc(m.garanzia) + '</span>' : '';
-          var dati = [
-            ['Matricola', m.matricola], ['Installazione', m.installazione],
-            ['Ultimo intervento', m.ultimoIntervento], m.garanziaAttiva === null && m.garanzia ? ['Garanzia', m.garanzia] : null
-          ].filter(function(d) { return d && d[1]; }).map(function(d) {
-            return '<div><div class="l">' + esc(d[0]) + '</div><div class="v">' + esc(d[1]) + '</div></div>';
-          }).join('');
-          var filtro = [m.macchina, m.modello].filter(String).join('|');
-          return '<div class="card">' +
-            '<h3>' + esc(m.macchina || m.modello) + '</h3>' +
-            (m.macchina && m.modello ? '<div class="modello">' + esc(m.modello) + '</div>' : '') +
-            badge +
-            (dati ? '<div class="dati">' + dati + '</div>' : '') +
-            (m.note ? '<div class="note">' + esc(m.note) + '</div>' : '') +
-            '<div class="azioni">' +
-              (moduliConsentiti.indexOf('MANUALI') !== -1 ? '<button class="btn ghost" data-filtro="' + esc(filtro) + '" onclick="apri(\'MANUALI\',{filtro:this.dataset.filtro})">📘 Manuali</button>' : '') +
-              (moduliConsentiti.indexOf('HELPDESK') !== -1 ? '<button class="btn" onclick="apri(\'HELPDESK\')">Richiedi assistenza</button>' : '') +
-            '</div></div>';
-        }).join('') + '</div>';
-      }
-      contenuto(html + '</div></div>');
+      datiMacchinari = r;
+      disegnaMacchinari();
     }).catch(function(err) { errore('Errore di connessione: ' + err.message); });
+  }
+
+  function titoloMacchina(m) { return [m.marca, m.modello].filter(String).join(' ') || m.categoria; }
+
+  function disegnaMacchinari() {
+    var r = datiMacchinari;
+    var html = '<div class="pagina"><div class="pagina-inner">' +
+      '<div class="testata"><div><h1 class="titolo-pagina">I tuoi macchinari</h1>' +
+      '<p class="sottotitolo">Apparecchiature registrate per il tuo laboratorio.</p></div>' +
+      '<button class="btn" onclick="apriFormMacchina()">+ Aggiungi macchinario</button></div>';
+    if (!r.macchinari.length) {
+      html += '<div class="card"><p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.6">' +
+        'Non risultano ancora macchinari sul tuo account. Aggiungili con il pulsante <b>+ Aggiungi macchinario</b>: ' +
+        'così vedrai i manuali giusti e i nostri tecnici avranno già i dati delle tue apparecchiature.</p></div>';
+    } else {
+      html += '<div class="grid-macchine">' + r.macchinari.map(function(m, idx) {
+        var badge = m.daVerificare ? '<span class="badge attesa">In verifica da parte di Dentag</span>'
+                  : m.garanziaAttiva === true ? '<span class="badge ok">In garanzia fino al ' + esc(m.garanzia) + '</span>'
+                  : m.garanziaAttiva === false ? '<span class="badge ko">Garanzia scaduta il ' + esc(m.garanzia) + '</span>' : '';
+        var dati = [
+          ['Matricola', m.matricola], ['Installazione', m.installazione],
+          ['Ultimo intervento', m.ultimoIntervento], ['Prossima manutenzione', m.prossimaManutenzione]
+        ].filter(function(d) { return d[1]; }).map(function(d) {
+          return '<div><div class="l">' + esc(d[0]) + '</div><div class="v">' + esc(d[1]) + '</div></div>';
+        }).join('');
+        var filtro = [m.marca, m.modello, m.categoria].join('|');
+        return '<div class="card">' +
+          '<h3>' + esc(titoloMacchina(m)) + '</h3>' +
+          '<div class="modello">' + esc(m.categoria) + '</div>' +
+          badge +
+          (dati ? '<div class="dati">' + dati + '</div>' : '') +
+          '<div class="azioni">' +
+            (m.modificabile ? '<button class="btn ghost" onclick="apriFormMacchina(' + idx + ')">✏️ Modifica</button>' : '') +
+            (moduliConsentiti.indexOf('MANUALI') !== -1 ? '<button class="btn ghost" data-filtro="' + esc(filtro) + '" onclick="apri(\'MANUALI\',{filtro:this.dataset.filtro})">📘 Manuali</button>' : '') +
+            (moduliConsentiti.indexOf('HELPDESK') !== -1 ? '<button class="btn" onclick="apri(\'HELPDESK\')">Richiedi assistenza</button>' : '') +
+          '</div></div>';
+      }).join('') + '</div>';
+    }
+    contenuto(html + '</div></div>');
+  }
+
+  function apriFormMacchina(idx) {
+    var r = datiMacchinari;
+    var m = idx == null ? null : r.macchinari[idx];
+    var opz = function(lista, scelto, vuota) {
+      return (vuota ? '<option value="">' + vuota + '</option>' : '') + lista.map(function(x) {
+        return '<option' + (x === scelto ? ' selected' : '') + '>' + esc(x) + '</option>';
+      }).join('');
+    };
+    document.getElementById('modal-macchina-corpo').innerHTML =
+      '<h3>' + (m ? 'Modifica macchinario' : 'Aggiungi macchinario') + '</h3>' +
+      '<p class="sub-modal">' + (m ? 'Puoi modificarlo finché Dentag non l\'ha verificato.' : 'Dopo il salvataggio lo verificheremo noi; nel frattempo lo vedi già nel portale.') + '</p>' +
+      '<label for="mc-categoria">Tipo di apparecchiatura *</label>' +
+      '<select id="mc-categoria" required>' + opz(r.categorie, m && m.categoria, 'Scegli…') + '</select>' +
+      '<label for="mc-marca">Marca</label>' +
+      '<input id="mc-marca" list="mc-marche" autocomplete="off" value="' + esc(m ? m.marca : '') + '" placeholder="es. Rapid Shape, XANOS, Ceramill">' +
+      '<datalist id="mc-marche">' + r.marche.map(function(x) { return '<option value="' + esc(x) + '">'; }).join('') + '</datalist>' +
+      '<label for="mc-modello">Modello</label>' +
+      '<input id="mc-modello" value="' + esc(m ? m.modello : '') + '" placeholder="es. PRO 30, X1, Motion 3">' +
+      '<label for="mc-matricola">Matricola / numero di serie</label>' +
+      '<input id="mc-matricola" value="' + esc(m ? m.matricola : '') + '" placeholder="sulla targhetta della macchina">' +
+      '<label for="mc-data">Data di acquisto o installazione</label>' +
+      '<input id="mc-data" type="date" value="' + esc(m ? m.installazioneIso : '') + '">' +
+      '<label for="mc-dentag">Acquistata da Dentag?</label>' +
+      '<select id="mc-dentag">' + opz(['Sì', 'No'], m ? (m.acquistataDentag || 'Sì') : 'Sì') + '</select>' +
+      '<div class="msg" id="msg-macchina"></div>' +
+      '<div class="azioni">' +
+        '<button type="submit" class="btn" id="btn-macchina">' + (m ? 'Salva modifiche' : 'Registra macchinario') + '</button>' +
+        '<button type="button" class="btn ghost" onclick="chiudiFormMacchina()">Annulla</button>' +
+        (m ? '<button type="button" class="btn ghost elimina" onclick="eliminaMacchina(\'' + esc(m.id) + '\')">Elimina</button>' : '') +
+      '</div>';
+    var form = document.getElementById('modal-macchina-corpo');
+    form.dataset.id = m ? m.id : '';
+    document.getElementById('modal-macchina').classList.add('aperto');
+    document.querySelector('.sidebar').classList.remove('aperta');
+  }
+
+  function chiudiFormMacchina() { document.getElementById('modal-macchina').classList.remove('aperto'); }
+
+  function salvaMacchina(e) {
+    e.preventDefault();
+    var form = document.getElementById('modal-macchina-corpo');
+    var msg = document.getElementById('msg-macchina');
+    var btn = document.getElementById('btn-macchina');
+    var dati = {
+      id: form.dataset.id || '',
+      categoria: document.getElementById('mc-categoria').value,
+      marca: document.getElementById('mc-marca').value,
+      modello: document.getElementById('mc-modello').value,
+      matricola: document.getElementById('mc-matricola').value,
+      dataInstallazione: document.getElementById('mc-data').value,
+      acquistataDentag: document.getElementById('mc-dentag').value
+    };
+    if (!dati.marca.trim() && !dati.modello.trim()) {
+      msg.className = 'msg errore'; msg.textContent = 'Inserisci almeno marca o modello.'; return false;
+    }
+    btn.disabled = true;
+    api({ azione: 'salvaMacchinario', macchina: dati }).then(function(r) {
+      btn.disabled = false;
+      if (!r.ok) { msg.className = 'msg errore'; msg.textContent = r.messaggio; return; }
+      cacheManuali = null;               // i manuali visibili possono cambiare
+      chiudiFormMacchina();
+      renderMacchinari();
+    }).catch(function(err) { btn.disabled = false; msg.className = 'msg errore'; msg.textContent = err.message; });
+    return false;
+  }
+
+  function eliminaMacchina(id) {
+    if (!window.confirm('Eliminare questo macchinario?')) return;
+    api({ azione: 'eliminaMacchinario', id: id }).then(function(r) {
+      if (!r.ok) { var msg = document.getElementById('msg-macchina'); msg.className = 'msg errore'; msg.textContent = r.messaggio; return; }
+      cacheManuali = null;
+      chiudiFormMacchina();
+      renderMacchinari();
+    });
   }
 
   /* ---------------- MANUALI ---------------- */
@@ -342,7 +445,7 @@
       // se il filtro arriva da un macchinario e coincide con una categoria, apri quella
       if (filtro) {
         var parti = filtro.split('|');
-        statoManuali.testo = parti[parti.length - 1];   // in mancanza di categoria: cerca per modello
+        statoManuali.testo = parti[1] || parti[0] || '';   // in mancanza di cartella: cerca per modello
         parti.forEach(function(p) {
           var n = normalizza(p);
           cacheManuali.forEach(function(c) {
@@ -484,7 +587,7 @@
   }
 
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { chiudiViewer(); chiudiCambioPassword(); }
+    if (e.key === 'Escape') { chiudiViewer(); chiudiCambioPassword(); chiudiFormMacchina(); }
   });
 </script>
 </body>
