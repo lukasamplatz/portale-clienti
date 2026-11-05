@@ -6,7 +6,7 @@
 window.PORTALE_CLIENTI = {
   VERSIONE: 'v1.8',
 
-  API_URL: 'https://script.google.com/macros/s/AKfycbzpd7q2BZriZy9pDhlHmhMGgwbuJMN7H_ut9l0oSJHkAslGtETFOVy4GcDwa2oSl2LdBA/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbz60GcNee1feCd2WLVZOaQiFPiy_W0Nc7WUj7DowlsdlkWuYxhuHd2m3l5izz54MPYVww/exec',
 
   // Contatti mostrati nel portale
   TELEFONO: '+39 0471 256 233',
